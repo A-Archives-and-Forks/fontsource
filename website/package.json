@@ -1,7 +1,10 @@
 {
 	"name": "website",
 	"private": true,
-	"sideEffects": false,
+	"sideEffects": [
+		"./app/bones/registry.ts",
+		"**/*.css"
+	],
 	"type": "module",
 	"scripts": {
 		"build": "react-router build",
@@ -29,6 +32,7 @@
 		"@react-router/fs-routes": "^7.15.0",
 		"@tabler/icons-react": "^3.44.0",
 		"algoliasearch": "^5.52.1",
+		"boneyard-js": "1.8.2",
 		"browserslist": "^4.28.2",
 		"clsx": "^2.1.1",
 		"fallback-font": "^1.0.1",
