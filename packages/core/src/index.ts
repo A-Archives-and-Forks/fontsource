@@ -27,5 +27,6 @@ export type {
 export {
 	determineAxisKey,
 	getVariableAxisKeys,
+	resolveFontFaces,
 	selectVariableAxisKey,
 } from './utils';
