@@ -2,6 +2,7 @@ import { convertFont, createFontContext } from '@fontsource-utils/core';
 import { zipSync } from 'fflate';
 import { HTTPException } from 'hono/http-exception';
 import limitConcur from 'limit-concur';
+import { createGzipDecoder, unpackTar } from 'modern-tar';
 import type {
 	BuildDownloadRequest,
 	BuildFileRequest,
@@ -28,7 +29,7 @@ import {
 import {
 	fetchPackageAssetBytes,
 	fetchPackageFileList,
-	fetchPackageLicenseBytes,
+	fetchPackageTarball,
 	UpstreamNotFoundError,
 } from '../../shared/upstream';
 import { putObject } from './r2';
@@ -64,24 +65,40 @@ const createArtifact = (
 	extension,
 });
 
+const getPackageFile = (
+	files: ReadonlyMap<string, Uint8Array>,
+	filename: string,
+): Uint8Array => {
+	const bytes = files.get(filename);
+	if (!bytes) {
+		throw new Error(`Expected npm package file "${filename}" was not found`);
+	}
+
+	return bytes;
+};
+
+const uploadArtifacts = (
+	artifacts: readonly BuiltArtifact[],
+): Promise<void>[] =>
+	artifacts.map(
+		limitConcur(8, async (artifact) => {
+			await putObject(artifact.key, artifact.bytes, {
+				cacheControl: IMMUTABLE_ASSET_CACHE_CONTROL,
+				contentType: BINARY_CONTENT_TYPES[artifact.extension],
+			});
+		}),
+	);
+
 const storeArtifacts = async (
 	artifacts: readonly BuiltArtifact[],
 ): Promise<void> => {
-	await Promise.all(
-		artifacts.map(
-			limitConcur(8, async (artifact) => {
-				await putObject(artifact.key, artifact.bytes, {
-					cacheControl: IMMUTABLE_ASSET_CACHE_CONTROL,
-					contentType: BINARY_CONTENT_TYPES[artifact.extension],
-				});
-			}),
-		),
-	);
+	await Promise.all(uploadArtifacts(artifacts));
 };
 
 const buildStaticArtifacts = async (
 	tag: BuildVersionTag,
 	manifest: readonly StaticFontEntry[],
+	packageFiles?: ReadonlyMap<string, Uint8Array>,
 ): Promise<BuiltArtifact[]> => {
 	if (manifest.length === 0) {
 		return [];
@@ -96,7 +113,9 @@ const buildStaticArtifacts = async (
 			return existing;
 		}
 
-		const load = fetchPackageAssetBytes(tag.id, tag.version, filename);
+		const load = packageFiles
+			? Promise.resolve(getPackageFile(packageFiles, filename))
+			: fetchPackageAssetBytes(tag.id, tag.version, filename);
 		fetchCache.set(filename, load);
 		return load;
 	};
@@ -175,6 +194,7 @@ const buildStaticArtifacts = async (
 const buildVariableArtifacts = async (
 	tag: BuildVersionTag,
 	manifest: readonly VariableFontEntry[],
+	packageFiles?: ReadonlyMap<string, Uint8Array>,
 ): Promise<BuiltArtifact[]> => {
 	if (manifest.length === 0) {
 		return [];
@@ -188,18 +208,22 @@ const buildVariableArtifacts = async (
 				limitConcur(
 					8,
 					async (item) =>
-						await ignoreUpstream404(async () =>
-							createArtifact(
+						await ignoreUpstream404(async () => {
+							const bytes = packageFiles
+								? getPackageFile(packageFiles, item.sourceFilename)
+								: await fetchPackageAssetBytes(
+										tag.id,
+										tag.version,
+										item.sourceFilename,
+										true,
+									);
+
+							return createArtifact(
 								getVariableAssetKey(tag.id, tag.version, item.filename),
-								await fetchPackageAssetBytes(
-									tag.id,
-									tag.version,
-									item.sourceFilename,
-									true,
-								),
+								bytes,
 								item.extension,
-							),
-						),
+							);
+						}),
 				),
 			),
 		)
@@ -252,37 +276,72 @@ const buildSingleArtifact = async (
 	return built.length;
 };
 
+const readPackageArchive = async (
+	id: string,
+	version: string,
+	isVariable: boolean,
+): Promise<Map<string, Uint8Array>> => {
+	const assetPrefix = `package/files/${id}-`;
+	const entries = await unpackTar(
+		(await fetchPackageTarball(id, version, isVariable)).pipeThrough(
+			createGzipDecoder(),
+		),
+		{
+			strict: true,
+			filter: (header) =>
+				header.name === 'package/LICENSE' ||
+				header.name.startsWith(assetPrefix),
+		},
+	);
+
+	return new Map(
+		entries.flatMap((entry) => {
+			if (!entry.data) return [];
+
+			const filename =
+				entry.header.name === 'package/LICENSE'
+					? 'LICENSE'
+					: entry.header.name.slice(assetPrefix.length);
+			return [[filename, entry.data]];
+		}),
+	);
+};
+
 const buildDownloadArtifacts = async (
 	request: BuildDownloadRequest,
 ): Promise<number> => {
 	const { id } = request.metadata;
 	const axes = request.metadata.variable || undefined;
+	if (axes && !request.variableVersion) {
+		throw new Error(`Variable package version required for ${id}`);
+	}
+
 	const variableVersion = request.variableVersion ?? request.staticVersion;
 	const staticTag = { id, version: request.staticVersion };
 	const variableTag = { id, version: variableVersion };
-	const [publishedStaticFiles, publishedVariableFiles] = await Promise.all([
-		fetchPackageFileList(id, request.staticVersion, false),
+	const [staticPackage, variablePackage] = await Promise.all([
+		readPackageArchive(id, request.staticVersion, false),
 		axes && request.variableVersion
-			? fetchPackageFileList(id, request.variableVersion, true)
+			? readPackageArchive(id, request.variableVersion, true)
 			: undefined,
 	]);
 	const { static: staticManifest, variable: variableManifest } =
 		filterPublishedManifest(
 			resolveFontPackageManifest(request.metadata, axes),
-			publishedStaticFiles,
-			publishedVariableFiles,
+			new Set(staticPackage.keys()),
+			variablePackage ? new Set(variablePackage.keys()) : undefined,
 		);
 
-	if (staticManifest.length === 0 && variableManifest.length === 0) {
+	if (staticManifest.length === 0 || (axes && variableManifest.length === 0)) {
 		throw new Error(
 			`No artifacts published for ${id}@${request.staticVersion}`,
 		);
 	}
 
 	const [staticArtifacts, variableArtifacts, license] = await Promise.all([
-		buildStaticArtifacts(staticTag, staticManifest),
-		buildVariableArtifacts(variableTag, variableManifest),
-		fetchPackageLicenseBytes(id, request.staticVersion, false),
+		buildStaticArtifacts(staticTag, staticManifest, staticPackage),
+		buildVariableArtifacts(variableTag, variableManifest, variablePackage),
+		getPackageFile(staticPackage, 'LICENSE'),
 	]);
 	const artifacts = [...staticArtifacts, ...variableArtifacts];
 	const builtByKey = new Map(
@@ -321,7 +380,6 @@ const buildDownloadArtifacts = async (
 		]),
 	);
 
-	await storeArtifacts(artifacts);
 	await putObject(
 		getDownloadKey(id, request.staticVersion, request.variableVersion),
 		archive,
@@ -330,6 +388,16 @@ const buildDownloadArtifacts = async (
 			contentType: BINARY_CONTENT_TYPES.zip,
 		},
 	);
+	const warmResults = await Promise.allSettled(uploadArtifacts(artifacts));
+	const warmFailures = warmResults.filter(
+		(result) => result.status === 'rejected',
+	);
+	if (warmFailures.length > 0) {
+		console.error(
+			`[artifacts] failed to warm ${warmFailures.length}/${artifacts.length} individual artifacts for ${id}@${request.staticVersion}`,
+			warmFailures.map((result) => result.reason),
+		);
+	}
 
 	return artifacts.length + 1;
 };
