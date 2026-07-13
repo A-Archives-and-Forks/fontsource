@@ -12,10 +12,10 @@ import {
 	useState,
 } from 'react';
 import { useInfiniteHits, useInstantSearch } from 'react-instantsearch';
-import { Link as NavLink } from 'react-router';
 
+import { FontCard } from '@/components/FontCard';
 import { Skeleton } from '@/components/Skeleton';
-import { useIsFontReady } from '@/hooks/useIsFontLoaded';
+import { useCollectionsStore } from '@/features/collections/CollectionsProvider';
 import { getPreviewText } from '@/utils/language/language';
 
 import classes from './Hits.module.css';
@@ -56,25 +56,6 @@ const getRowClassName = (display: Display) =>
 		: classes['result-row'];
 
 const HitComponent = observer(({ hit, state$ }: HitComponentProps) => {
-	const stylesheetHref = `https://cdn.jsdelivr.net/fontsource/css/${hit.objectID}@latest/index.css`;
-
-	// State to track if the font's CSS stylesheet has loaded.
-	const [isStylesheetLoaded, setStylesheetLoaded] = useState(false);
-	const isFontReady = useIsFontReady(hit.family, isStylesheetLoaded);
-
-	useEffect(() => {
-		if (isStylesheetLoaded) {
-			return;
-		}
-
-		for (const sheet of document.styleSheets) {
-			if (sheet.href === stylesheetHref) {
-				setStylesheetLoaded(true);
-				return;
-			}
-		}
-	}, [isStylesheetLoaded, stylesheetHref]);
-
 	const display = useValue(state$.display);
 	const size = useValue(state$.size);
 
@@ -101,39 +82,19 @@ const HitComponent = observer(({ hit, state$ }: HitComponentProps) => {
 	});
 
 	return (
-		<Box
-			renderRoot={({ ...others }) => (
-				<NavLink prefetch="intent" to={`/fonts/${hit.objectID}`} {...others} />
-			)}
-			className={classes.wrapper}
-			mih={{ base: '150px', sm: display === 'grid' ? '332px' : '150px' }}
-		>
-			<link
-				rel="stylesheet"
-				href={stylesheetHref}
-				onLoad={() => setStylesheetLoaded(true)}
-				onError={() => setStylesheetLoaded(true)} // Also enable on error to prevent infinite skeleton.
-			/>
-			<Skeleton name="search-hit-preview" loading={!isFontReady}>
-				<Text
-					fz={size}
-					mih={display === 'grid' ? getGridPreviewHeight(size) : undefined}
-					style={{ fontFamily: `"${hit.family}", "Fallback Outline"` }}
-				>
-					{currentPreview}
-				</Text>
-			</Skeleton>
-			<Group className={classes['text-group']}>
-				<Text fz={18} fw={700} component="span">
-					{hit.family}
-				</Text>
-				{hit.variable && (
-					<Text fz={15} fw={700} component="span">
-						Variable
-					</Text>
-				)}
-			</Group>
-		</Box>
+		<FontCard
+			font={{
+				id: hit.objectID,
+				family: hit.family,
+				defSubset: hit.defSubset,
+				category: hit.category,
+				variable: hit.variable,
+			}}
+			layout={display}
+			preview={currentPreview}
+			previewHeight={getGridPreviewHeight(size)}
+			size={size}
+		/>
 	);
 });
 
@@ -177,6 +138,15 @@ const LoadingRow = ({ display, previewHeight }: LoadingPlaceholderProps) => (
 );
 
 const InfiniteHits = observer(({ state$ }: InfiniteHitsProps) => {
+	const collectionsStore = useCollectionsStore();
+	const collectionId = useValue(state$.collectionId);
+	const collections = useValue(collectionsStore.getCollections);
+	const collection = collections.find((item) => item.id === collectionId);
+	const collectionMessage = collection
+		? collection.fontIds.length === 0
+			? `${collection.name} does not have any fonts yet.`
+			: `No fonts in ${collection.name} match these filters.`
+		: undefined;
 	const display = state$.display.get();
 	const loadingStatusId = useId();
 	const resultsRootRef = useRef<HTMLDivElement | null>(null);
@@ -204,6 +174,7 @@ const InfiniteHits = observer(({ state$ }: InfiniteHitsProps) => {
 	const previewValue =
 		state$.preview.customValue.get() || state$.preview.presetValue.get();
 	const searchKey = JSON.stringify({
+		collectionId,
 		menu: indexUiState.menu ?? {},
 		query: indexUiState.query ?? '',
 		refinementList: indexUiState.refinementList ?? {},
@@ -330,7 +301,11 @@ const InfiniteHits = observer(({ state$ }: InfiniteHitsProps) => {
 	if (!results.__isArtificial && results.nbHits === 0) {
 		return (
 			<Box>
-				<Text>No results found for &quot;{indexUiState.query}&quot;</Text>
+				<Text role="status">
+					{collectionMessage
+						? collectionMessage
+						: `No results found for "${indexUiState.query ?? ''}"`}
+				</Text>
 			</Box>
 		);
 	}
