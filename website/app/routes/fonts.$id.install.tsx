@@ -11,7 +11,7 @@ import {
 	type GetFontResponse,
 } from '@/generated/api';
 import { cacheHeaders } from '@/utils/cache';
-import { ogMeta } from '@/utils/meta';
+import { getFontOpenGraphImage, ogMeta } from '@/utils/meta';
 
 export const loader = async ({ params, request }: LoaderFunctionArgs) => {
 	const { id } = params;
@@ -59,7 +59,10 @@ export const meta: MetaFunction<typeof loader> = ({ loaderData }) => {
 	const description = loaderData?.metadata
 		? generateDescription(loaderData.metadata)
 		: undefined;
-	return ogMeta({ title, description });
+	const image = loaderData?.metadata
+		? getFontOpenGraphImage(loaderData.metadata)
+		: undefined;
+	return ogMeta({ title, description, image });
 };
 
 export default function InstallPage() {
