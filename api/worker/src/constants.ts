@@ -6,7 +6,6 @@ import {
 export const KV_KEYS = {
 	catalog: 'catalog',
 	axisRegistry: 'axis_registry',
-	stats: 'download_stats',
 } as const;
 
 export { UPSTREAM_URLS } from '../../shared/upstream';
@@ -17,6 +16,12 @@ export const CACHE_POLICIES = {
 		'CDN-Cache-Control': 'public, max-age=86400',
 		'Cloudflare-CDN-Cache-Control':
 			'public, max-age=10800, stale-while-revalidate=86400, stale-if-error=86400',
+	},
+	stats: {
+		'Cache-Control': 'public, max-age=300',
+		'CDN-Cache-Control': 'public, max-age=86400',
+		'Cloudflare-CDN-Cache-Control':
+			'public, max-age=86400, stale-while-revalidate=86400, stale-if-error=86400',
 	},
 	floating: {
 		'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
