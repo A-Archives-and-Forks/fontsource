@@ -12,10 +12,8 @@ import { findClosest } from '../utils';
 const REGISTERED_AXES = new Set(['wght', 'wdth', 'slnt', 'opsz']);
 
 /**
- * We need to generate all CSS in this one file to ensure that pkgroll
- * exports these functions without accidentally importing unnecessary
- * node modules. Unfortunately mixing other functions leads to node
- * imports breaking builds that don't run in Node environments.
+ * Keep browser-safe CSS generators in one module so the browser entry does not
+ * pull Node.js-only imports into downstream builds.
  */
 
 type GenerateMetadataV1 = Pick<

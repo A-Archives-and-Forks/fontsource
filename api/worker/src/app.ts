@@ -9,8 +9,8 @@ import type { AppEnv } from './env';
 import {
 	GetFontRoute,
 	GetFontStatsRoute,
-	GetStatsBadgeRoute,
 	GetFontVersionsRoute,
+	GetStatsBadgeRoute,
 	GetVariableFontRoute,
 	ListAxisRegistryRoute,
 	ListFontsRoute,
