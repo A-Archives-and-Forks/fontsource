@@ -17,7 +17,9 @@ Both source revisions must be exact 40-character commits. Generation also
 requires complete Git history so per-path provenance is accurate; shallow
 repositories are rejected.
 Generation validates existing `policy.json` files but never creates or changes
-package policy. Registry data is written to `data/`.
+package policy. Registry data is written to `data/` and refreshed weekly or on
+demand by the [registry sync workflow](../.github/workflows/registry-sync.yml),
+which validates changes before committing them to `main`.
 
 ## Structure
 
