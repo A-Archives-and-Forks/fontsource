@@ -1,15 +1,15 @@
 {
 	"fontFiles": {
 		"repository": "fontsource/font-files",
-		"revision": "68bdbed08720634c2cc40e647676ae660feeb020"
+		"revision": "17d93df48cf49fa2e46a9009461f5565e4fced4e"
 	},
 	"googleFonts": {
 		"repository": "google/fonts",
-		"revision": "2d85e20401920891efb7cd6272d6339685df2820"
+		"revision": "352f6b7d9d6cc4fa9e242b931291d31b21a6dc84"
 	},
 	"googleIcons": {
 		"repository": "google/material-design-icons",
-		"revision": "50f0603134ce7b70b2d71b686cc13e8b57ccb74c"
+		"revision": "e083cc60a0828fdd3b404cea0cb8a5b900e9c23e"
 	},
 	"namFiles": {
 		"repository": "googlefonts/nam-files",
