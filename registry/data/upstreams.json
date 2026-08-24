@@ -1,11 +1,11 @@
 {
 	"fontFiles": {
 		"repository": "fontsource/font-files",
-		"revision": "17d93df48cf49fa2e46a9009461f5565e4fced4e"
+		"revision": "d28de2c600deb75fdaaef51f7c3fb478f856a7df"
 	},
 	"googleFonts": {
 		"repository": "google/fonts",
-		"revision": "352f6b7d9d6cc4fa9e242b931291d31b21a6dc84"
+		"revision": "ec626514f79f831f1ab848a82114a0ce7e2d6372"
 	},
 	"googleIcons": {
 		"repository": "google/material-design-icons",
