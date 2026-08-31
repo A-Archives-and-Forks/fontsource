@@ -1,8 +1,8 @@
 {
 	"categoriesSource": {
 		"path": "update/current_versions.json",
-		"revision": "e083cc60a0828fdd3b404cea0cb8a5b900e9c23e",
-		"sha256": "e01aab8aebb7a10341a0cc8d27ff0e28c063343ae3a49156c888696b74262454"
+		"revision": "84ccef280841abfac506afc4ad4a2782f6d0a1d0",
+		"sha256": "bf43ff282c0c714d9f9e61aa1e4fd16f346ba58658c7751c14bd036424b30211"
 	},
 	"icons": [
 		{
@@ -2404,7 +2404,7 @@
 				"action",
 				"symbols"
 			],
-			"codepoint": 61319,
+			"codepoint": 61250,
 			"name": "article"
 		},
 		{
@@ -3895,7 +3895,7 @@
 			"categories": [
 				"symbols"
 			],
-			"codepoint": 59000,
+			"codepoint": 58983,
 			"name": "bid_landscape"
 		},
 		{
@@ -4809,6 +4809,13 @@
 			],
 			"codepoint": 61256,
 			"name": "build_circle"
+		},
+		{
+			"categories": [
+				"symbols"
+			],
+			"codepoint": 1048263,
+			"name": "bullet_chart"
 		},
 		{
 			"categories": [
@@ -8878,6 +8885,13 @@
 		},
 		{
 			"categories": [
+				"symbols"
+			],
+			"codepoint": 1048262,
+			"name": "domain_disabled_check"
+		},
+		{
+			"categories": [
 				"communication",
 				"symbols"
 			],
@@ -9057,7 +9071,7 @@
 			"categories": [
 				"symbols"
 			],
-			"codepoint": 58996,
+			"codepoint": 58989,
 			"name": "draft"
 		},
 		{
@@ -9199,13 +9213,6 @@
 			],
 			"codepoint": 59811,
 			"name": "drive_folder_upload"
-		},
-		{
-			"categories": [
-				"symbols"
-			],
-			"codepoint": 59000,
-			"name": "drive_fusiontable"
 		},
 		{
 			"categories": [
@@ -14920,7 +14927,7 @@
 				"editor",
 				"symbols"
 			],
-			"codepoint": 58996,
+			"codepoint": 58989,
 			"name": "insert_drive_file"
 		},
 		{
@@ -16250,10 +16257,17 @@
 		},
 		{
 			"categories": [
+				"symbols"
+			],
+			"codepoint": 1048266,
+			"name": "list_2"
+		},
+		{
+			"categories": [
 				"communication",
 				"symbols"
 			],
-			"codepoint": 58999,
+			"codepoint": 57582,
 			"name": "list_alt"
 		},
 		{
@@ -18629,7 +18643,7 @@
 				"av",
 				"symbols"
 			],
-			"codepoint": 59012,
+			"codepoint": 58372,
 			"name": "movie"
 		},
 		{
@@ -18637,7 +18651,7 @@
 				"image",
 				"symbols"
 			],
-			"codepoint": 59012,
+			"codepoint": 58372,
 			"name": "movie_creation"
 		},
 		{
@@ -19818,7 +19832,7 @@
 				"av",
 				"symbols"
 			],
-			"codepoint": 58996,
+			"codepoint": 58989,
 			"name": "note"
 		},
 		{
@@ -25616,6 +25630,13 @@
 			"categories": [
 				"symbols"
 			],
+			"codepoint": 1048257,
+			"name": "sim_card_lock"
+		},
+		{
+			"categories": [
+				"symbols"
+			],
 			"codepoint": 62433,
 			"name": "simulation"
 		},
@@ -26259,6 +26280,13 @@
 			],
 			"codepoint": 63655,
 			"name": "speech_to_text"
+		},
+		{
+			"categories": [
+				"symbols"
+			],
+			"codepoint": 1048265,
+			"name": "speech_to_text_2"
 		},
 		{
 			"categories": [
@@ -31334,7 +31362,7 @@
 				"av",
 				"symbols"
 			],
-			"codepoint": 59009,
+			"codepoint": 58986,
 			"name": "web"
 		},
 		{
@@ -32000,7 +32028,7 @@
 	],
 	"source": {
 		"path": "variablefont/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].codepoints",
-		"revision": "e083cc60a0828fdd3b404cea0cb8a5b900e9c23e",
-		"sha256": "cb8e63e819c1172b9653b7f15fecd024ac329f7854f65e9c7dc7cc9b78d993eb"
+		"revision": "84ccef280841abfac506afc4ad4a2782f6d0a1d0",
+		"sha256": "2ceabd8b6eba5ef81ff6f2fa8a801397f550841bf9cc42b03b5cc2e2d7aec9f1"
 	}
 }
